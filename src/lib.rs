@@ -3,7 +3,7 @@ pub mod input;
 pub mod program;
 pub mod witness;
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Step<F> {
     pub witness: witness::Witness<F>,
     pub program: program::IVCProgram<F>,
@@ -23,9 +23,10 @@ mod tests {
     use std::fs::File;
 
     use bellpepper_core::{test_cs::TestConstraintSystem, ConstraintSystem};
+    use nova_snark::traits::circuit::StepCircuit;
     use serde::de::DeserializeOwned;
 
-    use crate::{program::IVCProgram, witness::Witness};
+    use crate::{program::IVCProgram, witness::Witness, Step};
 
     #[inline]
     fn read<T: DeserializeOwned>(path: &str) -> T {
@@ -36,6 +37,24 @@ mod tests {
             .unwrap()
             .to_string();
         serde_json::from_reader(File::open(path).unwrap()).unwrap()
+    }
+
+    impl<F> StepCircuit<F> for Step<F>
+    where
+        F: ff::PrimeField + serde::Serialize + serde::Deserialize<'static>,
+    {
+        fn arity(&self) -> usize {
+            self.step_arity()
+        }
+
+        fn synthesize<CS: ConstraintSystem<F>>(
+            &self,
+            cs: &mut CS,
+            z: &[bellpepper_core::num::AllocatedNum<F>],
+        ) -> Result<Vec<bellpepper_core::num::AllocatedNum<F>>, bellpepper_core::SynthesisError>
+        {
+            self.step_synthesize(cs, z)
+        }
     }
 
     #[test]

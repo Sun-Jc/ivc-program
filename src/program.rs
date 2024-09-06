@@ -1,9 +1,9 @@
-use std::{
-    any::type_name, collections::{BTreeMap, BTreeSet}, ops::Deref
-};
+use std::{any::type_name, collections::BTreeSet, ops::Deref};
 
 use ff::PrimeField;
 use serde::{Deserialize, Serialize};
+
+use crate::witness::Witness;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq)]
 pub struct WitnessID(pub u32);
@@ -52,7 +52,6 @@ pub struct IOProfile {
     pub private_outputs: BTreeSet<WitnessID>,
 }
 
-
 #[derive(Clone, Serialize, Deserialize)]
 pub struct IVCProgram<F> {
     pub io: IOProfile,
@@ -74,10 +73,12 @@ impl<F> Deref for IVCProgram<F> {
 }
 
 impl<F: PrimeField> IVCProgram<F> {
-    pub fn make_empty_witness(&self) -> BTreeMap<WitnessID, F> {
-        (0..self.num_witness)
-            .map(|witness_id| (WitnessID(witness_id), F::ZERO))
-            .collect()
+    pub fn make_empty_witness(&self) -> Witness<F> {
+        Witness(
+            (0..self.num_witness)
+                .map(|witness_id| (WitnessID(witness_id), F::ZERO))
+                .collect(),
+        )
     }
 }
 

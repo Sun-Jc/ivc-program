@@ -2,22 +2,18 @@ use std::collections::BTreeSet;
 
 use bellpepper_core::{num::AllocatedNum, ConstraintSystem, SynthesisError};
 use ff::PrimeField;
-use nova_snark::traits::circuit::StepCircuit;
 use serde::{Deserialize, Serialize};
 
 use crate::Step;
 
 use super::variables::Variables;
 
-impl<F> StepCircuit<F> for Step<F>
-where
-    F: PrimeField + Serialize + for<'de> Deserialize<'de>,
-{
-    fn arity(&self) -> usize {
+impl<F: PrimeField> Step<F> {
+    pub fn step_arity(&self) -> usize {
         self.program.public_inputs.len()
     }
 
-    fn synthesize<CS: ConstraintSystem<F>>(
+    pub fn step_synthesize<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,
         z: &[AllocatedNum<F>],
@@ -83,7 +79,7 @@ where
         .get_ordered_subset(ids)?;
 
         let output =
-            self.synthesize(&mut cs.namespace(|| "synthesize"), &allocated_public_inputs)?;
+            self.step_synthesize(&mut cs.namespace(|| "synthesize"), &allocated_public_inputs)?;
 
         // Redundant Check
         {
